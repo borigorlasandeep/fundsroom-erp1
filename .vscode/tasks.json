@@ -1,0 +1,59 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "1. Start Database",
+      "type": "shell",
+      "command": "& 'C:\\Program Files\\PostgreSQL\\17\\bin\\postgres.exe' -D 'backend/db_data' -p 5433",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "group": "fundsroom-group",
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "2. Start Backend API",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "group": "fundsroom-group",
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "3. Start Frontend UI",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": {
+        "cwd": "${workspaceFolder}/frontend"
+      },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "group": "fundsroom-group",
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Launch ERP Portal (All Services)",
+      "dependsOn": [
+        "1. Start Database",
+        "2. Start Backend API",
+        "3. Start Frontend UI"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}
