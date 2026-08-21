@@ -9,144 +9,105 @@ datasource db {
 
 enum Role {
   ADMIN
-  SALES
-  WAREHOUSE
-  ACCOUNTS
+  OPERATIONS_USER
+  SALES_USER
 }
 
-enum CustomerType {
-  RETAIL
-  WHOLESALE
-  DISTRIBUTOR
+enum WorkOrderStatus {
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
 }
 
-enum CustomerStatus {
-  LEAD
-  ACTIVE
-  INACTIVE
+enum TransferStatus {
+  REQUESTED
+  DISPATCHED
+  RECEIVED
 }
 
-enum MovementType {
-  IN
-  OUT
-}
-
-enum ChallanStatus {
-  DRAFT
-  CONFIRMED
+enum CustomerOrderStatus {
+  RESERVED
+  COMPLETED
   CANCELLED
 }
 
 model User {
-  id            Int             @id @default(autoincrement())
-  name          String
-  email         String          @unique
-  passwordHash  String
-  role          Role
-  createdAt     DateTime        @default(now())
-  customers     Customer[]      @relation("CustomerCreatedBy")
-  products      Product[]       @relation("ProductCreatedBy")
-  stockMovements StockMovement[] @relation("StockMovementCreatedBy")
-  challans      Challan[]       @relation("ChallanCreatedBy")
-  followUps     FollowUp[]      @relation("FollowUpCreatedBy")
+  id           Int                @id @default(autoincrement())
+  name         String
+  email        String             @unique
+  passwordHash String
+  role         Role
+  createdAt    DateTime           @default(now())
+  workOrders   WorkOrder[]        @relation("AssignedUser")
+  transfers    InternalTransfer[] @relation("TransferCreatedBy")
+  orders       CustomerOrder[]    @relation("OrderCreatedBy")
 }
 
-model Customer {
-  id             Int            @id @default(autoincrement())
-  name           String
-  mobile         String
-  email          String?
-  businessName   String
-  gstNumber      String?
-  type           CustomerType
-  address        String
-  status         CustomerStatus @default(LEAD)
-  followUpDate   DateTime?
-  notes          String?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  createdById    Int?
-  createdBy      User?          @relation("CustomerCreatedBy", fields: [createdById], references: [id])
-  followUps      FollowUp[]
-  challans       Challan[]
+model InventoryItem {
+  id           Int      @id @default(autoincrement())
+  item         String
+  category     String
+  location     String
+  batch        String
+  physicalQty  Int      @default(0)
+  reservedQty  Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  @@index([name])
-  @@index([mobile])
-  @@index([status])
+  @@unique([item, location, batch])
+  @@index([item])
+  @@index([location])
 }
 
-model FollowUp {
-  id          Int       @id @default(autoincrement())
-  customerId  Int
-  createdById Int
-  note        String
-  followUpDate DateTime?
-  createdAt   DateTime  @default(now())
-  customer   Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  createdBy  User      @relation("FollowUpCreatedBy", fields: [createdById], references: [id])
+model WorkOrder {
+  id             Int             @id @default(autoincrement())
+  location       String
+  item           String
+  requiredQty    Int
+  assignedUserId Int
+  assignedUser   User            @relation("AssignedUser", fields: [assignedUserId], references: [id])
+  status         WorkOrderStatus @default(ASSIGNED)
+  shortageQty    Int             @default(0)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 }
 
-model Product {
-  id              Int             @id @default(autoincrement())
-  name            String
-  sku             String          @unique
-  category        String
-  unitPrice       Decimal         @db.Decimal(12, 2)
-  currentStock    Int             @default(0)
-  minStockQty     Int             @default(0)
-  warehouse       String
-  createdById     Int?
-  createdBy       User?           @relation("ProductCreatedBy", fields: [createdById], references: [id])
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  stockMovements  StockMovement[]
-  challanItems    ChallanItem[]
-
-  @@index([name])
-  @@index([category])
+model InternalTransfer {
+  id                  Int            @id @default(autoincrement())
+  sourceLocation      String
+  destinationLocation String
+  item                String
+  batch               String
+  quantity            Int
+  status              TransferStatus @default(REQUESTED)
+  createdById         Int
+  createdBy           User           @relation("TransferCreatedBy", fields: [createdById], references: [id])
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
 }
 
-model StockMovement {
-  id          Int          @id @default(autoincrement())
-  productId   Int
-  quantity    Int
-  type        MovementType
-  reason      String
-  createdById Int
-  createdAt   DateTime     @default(now())
-  product     Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
-  createdBy  User         @relation("StockMovementCreatedBy", fields: [createdById], references: [id])
-
-  @@index([productId, createdAt])
-}
-
-model Challan {
-  id           Int           @id @default(autoincrement())
-  challanNumber String        @unique
-  customerId   Int
-  totalQuantity Int           @default(0)
-  status       ChallanStatus @default(DRAFT)
+model CustomerOrder {
+  id           Int                 @id @default(autoincrement())
+  customerName String
+  item         String
+  location     String
+  batch        String
+  quantity     Int
+  status       CustomerOrderStatus @default(RESERVED)
   createdById  Int
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  customer     Customer      @relation(fields: [customerId], references: [id])
-  createdBy    User          @relation("ChallanCreatedBy", fields: [createdById], references: [id])
-  items        ChallanItem[]
-
-  @@index([status])
-  @@index([createdAt])
+  createdBy    User                @relation("OrderCreatedBy", fields: [createdById], references: [id])
+  createdAt    DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
 }
 
-model ChallanItem {
-  id            Int      @id @default(autoincrement())
-  challanId     Int
-  productId     Int
-  productName   String
-  sku           String
-  unitPrice     Decimal  @db.Decimal(12, 2)
-  quantity      Int
-  challan       Challan  @relation(fields: [challanId], references: [id], onDelete: Cascade)
-  product       Product  @relation(fields: [productId], references: [id])
-
-  @@index([challanId])
+model StockLog {
+  id          Int      @id @default(autoincrement())
+  item        String
+  location    String
+  batch       String
+  quantity    Int      // change in physical stock (+/-)
+  reservedChange Int   // change in reserved stock (+/-)
+  type        String   // e.g. "INITIAL", "WORK_ORDER_COMPLETED", "TRANSFER_DISPATCH", "TRANSFER_RECEIPT", "CUSTOMER_RESERVE", "CUSTOMER_RELEASE", "CUSTOMER_COMPLETE"
+  referenceId String?  // ID/number of work order, transfer, or customer order
+  createdAt   DateTime @default(now())
 }

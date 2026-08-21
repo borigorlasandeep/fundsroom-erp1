@@ -1,78 +1,123 @@
-import { PrismaClient, Role, CustomerType, CustomerStatus, MovementType } from "@prisma/client";
+import { PrismaClient, Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  const users = [
-    ["Admin User", "admin@fundsroom.local", "Admin@123", Role.ADMIN],
-    ["Sales User", "sales@fundsroom.local", "Sales@123", Role.SALES],
-    ["Warehouse User", "warehouse@fundsroom.local", "Warehouse@123", Role.WAREHOUSE],
-    ["Accounts User", "accounts@fundsroom.local", "Accounts@123", Role.ACCOUNTS]
-  ] as const;
+  // Clean up any existing data
+  await prisma.stockLog.deleteMany({});
+  await prisma.customerOrder.deleteMany({});
+  await prisma.internalTransfer.deleteMany({});
+  await prisma.workOrder.deleteMany({});
+  await prisma.inventoryItem.deleteMany({});
+  await prisma.user.deleteMany({});
 
-  const createdUsers: Record<string, number> = {};
+  console.log("Cleared old database records.");
 
-  for (const [name, email, password, role] of users) {
-    const passwordHash = await bcrypt.hash(password, 10);
-    const user = await prisma.user.upsert({
-      where: { email },
-      update: { passwordHash, role, name },
-      create: { name, email, passwordHash, role }
+  // Create Users
+  const passwordHashAdmin = await bcrypt.hash("Admin@123", 10);
+  const passwordHashOps = await bcrypt.hash("Ops@123", 10);
+  const passwordHashSales = await bcrypt.hash("Sales@123", 10);
+
+  const admin = await prisma.user.create({
+    data: {
+      name: "Admin User",
+      email: "admin@fundsroom.local",
+      passwordHash: passwordHashAdmin,
+      role: Role.ADMIN,
+    },
+  });
+
+  const ops = await prisma.user.create({
+    data: {
+      name: "Operations User",
+      email: "ops@fundsroom.local",
+      passwordHash: passwordHashOps,
+      role: Role.OPERATIONS_USER,
+    },
+  });
+
+  const sales = await prisma.user.create({
+    data: {
+      name: "Sales User",
+      email: "sales@fundsroom.local",
+      passwordHash: passwordHashSales,
+      role: Role.SALES_USER,
+    },
+  });
+
+  console.log("Users seeded successfully.");
+
+  // Create Inventory Items
+  const items = [
+    {
+      item: "Item-A",
+      category: "Electronics",
+      location: "Warehouse-1",
+      batch: "B-001",
+      physicalQty: 100,
+      reservedQty: 0,
+    },
+    {
+      item: "Item-A",
+      category: "Electronics",
+      location: "Warehouse-2",
+      batch: "B-001",
+      physicalQty: 50,
+      reservedQty: 0,
+    },
+    {
+      item: "Item-B",
+      category: "Accessories",
+      location: "Warehouse-1",
+      batch: "B-002",
+      physicalQty: 80,
+      reservedQty: 20,
+    },
+    {
+      item: "Item-B",
+      category: "Accessories",
+      location: "Warehouse-2",
+      batch: "B-002",
+      physicalQty: 30,
+      reservedQty: 0,
+    },
+    {
+      item: "Item-C",
+      category: "Raw Material",
+      location: "Warehouse-1",
+      batch: "B-003",
+      physicalQty: 60,
+      reservedQty: 10,
+    },
+  ];
+
+  for (const itemData of items) {
+    const inv = await prisma.inventoryItem.create({
+      data: itemData,
     });
-    createdUsers[role] = user.id;
+
+    // Log the initial stock movement
+    await prisma.stockLog.create({
+      data: {
+        item: inv.item,
+        location: inv.location,
+        batch: inv.batch,
+        quantity: inv.physicalQty,
+        reservedChange: inv.reservedQty,
+        type: "INITIAL",
+        referenceId: "SYSTEM_SEED",
+      },
+    });
   }
 
-  const existingCustomer = await prisma.customer.findFirst();
-  if (!existingCustomer) {
-    await prisma.customer.create({
-      data: {
-        name: "Apex Retail",
-        mobile: "9876543210",
-        email: "apex@example.com",
-        businessName: "Apex Retail Store",
-        gstNumber: "24ABCDE1234F1Z5",
-        type: CustomerType.RETAIL,
-        address: "Vadodara, Gujarat",
-        status: CustomerStatus.ACTIVE,
-        notes: "Demo customer",
-        createdById: createdUsers.ADMIN
-      }
-    });
-  }
-
-  const existingProduct = await prisma.product.findFirst();
-  if (!existingProduct) {
-    const product = await prisma.product.create({
-      data: {
-        name: "Wireless Keyboard",
-        sku: "KB-1001",
-        category: "Computer Accessories",
-        unitPrice: 899,
-        currentStock: 50,
-        minStockQty: 10,
-        warehouse: "Main Warehouse",
-        createdById: createdUsers.WAREHOUSE
-      }
-    });
-
-    await prisma.stockMovement.create({
-      data: {
-        productId: product.id,
-        quantity: 50,
-        type: MovementType.IN,
-        reason: "Opening stock",
-        createdById: createdUsers.WAREHOUSE
-      }
-    });
-  }
-
+  console.log("Inventory items seeded successfully.");
   console.log("Seed completed.");
 }
 
 main()
   .catch((error) => {
-    console.error(error);
+    console.error("Seed error:", error);
     process.exit(1);
   })
   .finally(async () => {
