@@ -37,3 +37,14 @@ export async function me(req: AuthRequest, res: Response) {
   });
   res.json({ success: true, user });
 }
+
+export async function getUsers(req: AuthRequest, res: Response) {
+  try {
+    const users = await prisma.user.findMany({
+      select: { id: true, name: true, email: true, role: true }
+    });
+    return res.json({ success: true, data: users });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+}
