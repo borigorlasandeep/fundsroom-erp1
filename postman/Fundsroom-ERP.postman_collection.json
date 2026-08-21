@@ -1,7 +1,7 @@
 {
   "info": {
-    "_postman_id": "fundsroom-erp-demo",
-    "name": "Fundsroom ERP API",
+    "_postman_id": "mini-operations-erp-demo",
+    "name": "Mini Operations ERP API",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -16,102 +16,273 @@
   ],
   "item": [
     {
-      "name": "Login",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"admin@fundsroom.local\", \"password\": \"Admin@123\"}"
+            },
+            "url": "{{baseUrl}}/auth/login"
           }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"email\": \"admin@fundsroom.local\", \"password\": \"Admin@123\"}"
         },
-        "url": "{{baseUrl}}/auth/login"
-      }
-    },
-    {
-      "name": "List Customers",
-      "request": {
-        "method": "GET",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{token}}"
+        {
+          "name": "Get Current User Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/me"
           }
-        ],
-        "url": "{{baseUrl}}/customers"
-      }
-    },
-    {
-      "name": "Create Customer",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"name\": \"Demo Customer\", \"mobile\": \"9999999999\", \"email\": \"demo@example.com\", \"businessName\": \"Demo Business\", \"type\": \"RETAIL\", \"address\": \"Vadodara\", \"status\": \"LEAD\"}"
         },
-        "url": "{{baseUrl}}/customers"
-      }
+        {
+          "name": "Get All Users List",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/users"
+          }
+        }
+      ]
     },
     {
-      "name": "List Products",
-      "request": {
-        "method": "GET",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{token}}"
+      "name": "Inventory",
+      "item": [
+        {
+          "name": "List Inventory Items",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/inventory"
           }
-        ],
-        "url": "{{baseUrl}}/products"
-      }
-    },
-    {
-      "name": "Create Confirmed Challan",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"customerId\": 1, \"status\": \"CONFIRMED\", \"items\": [{\"productId\": 1, \"quantity\": 2}]}"
         },
-        "url": "{{baseUrl}}/challans"
-      }
+        {
+          "name": "List Stock Transaction Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/inventory/logs"
+          }
+        }
+      ]
     },
     {
-      "name": "List Challans",
-      "request": {
-        "method": "GET",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{token}}"
+      "name": "Work Orders",
+      "item": [
+        {
+          "name": "Create Work Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"location\": \"Warehouse-1\", \"item\": \"Item-A\", \"requiredQty\": 120, \"assignedUserId\": 2}"
+            },
+            "url": "{{baseUrl}}/work-orders"
           }
-        ],
-        "url": "{{baseUrl}}/challans"
-      }
+        },
+        {
+          "name": "List Work Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/work-orders"
+          }
+        },
+        {
+          "name": "Update Work Order Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"status\": \"IN_PROGRESS\"}"
+            },
+            "url": "{{baseUrl}}/work-orders/1/status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Internal Transfers",
+      "item": [
+        {
+          "name": "Request Internal Stock Transfer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"sourceLocation\": \"Warehouse-1\", \"destinationLocation\": \"Warehouse-2\", \"item\": \"Item-A\", \"batch\": \"B-001\", \"quantity\": 15}"
+            },
+            "url": "{{baseUrl}}/transfers"
+          }
+        },
+        {
+          "name": "List Internal Transfers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/transfers"
+          }
+        },
+        {
+          "name": "Dispatch Transfer (Reduces Source Stock)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/transfers/1/dispatch"
+          }
+        },
+        {
+          "name": "Receive Transfer (Increases Destination Stock)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/transfers/1/receive"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customer Orders",
+      "item": [
+        {
+          "name": "Reserve Stock for Customer Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"customerName\": \"Acmecorp\", \"item\": \"Item-A\", \"location\": \"Warehouse-1\", \"batch\": \"B-001\", \"quantity\": 50}"
+            },
+            "url": "{{baseUrl}}/orders"
+          }
+        },
+        {
+          "name": "List Customer Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/orders"
+          }
+        },
+        {
+          "name": "Ship Customer Order (Deducts reserved stock)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/orders/1/complete"
+          }
+        },
+        {
+          "name": "Cancel Customer Order (Releases reserved stock)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/orders/1/cancel"
+          }
+        }
+      ]
     }
   ]
 }
