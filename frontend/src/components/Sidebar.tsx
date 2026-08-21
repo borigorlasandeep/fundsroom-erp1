@@ -3,16 +3,23 @@ import { useAuth } from "../context/AuthContext";
 
 export default function Sidebar() {
   const { user } = useAuth();
-  const links = [
-    ["/dashboard", "Dashboard"],
-    ["/customers", "Customers"],
-    ["/products", "Products"],
-    ["/challans", "Sales Challans"]
+  
+  const links: [string, string][] = [
+    ["/inventory", "Inventory"],
   ];
+
+  if (user?.role === "ADMIN" || user?.role === "OPERATIONS_USER") {
+    links.push(["/work-orders", "Work Orders"]);
+    links.push(["/transfers", "Internal Transfers"]);
+  }
+
+  if (user?.role === "ADMIN" || user?.role === "SALES_USER") {
+    links.push(["/orders", "Customer Orders"]);
+  }
 
   return (
     <aside className="sidebar">
-      <div className="brand">Fundsroom ERP</div>
+      <div className="brand">Operations ERP</div>
       <div className="role-badge">{user?.role}</div>
       <nav>
         {links.map(([to, label]) => (

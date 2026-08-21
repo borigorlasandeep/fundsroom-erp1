@@ -1,4 +1,4 @@
-export type Role = "ADMIN" | "SALES" | "WAREHOUSE" | "ACCOUNTS";
+export type Role = "ADMIN" | "OPERATIONS_USER" | "SALES_USER";
 
 export interface User {
   id: number;
@@ -7,27 +7,68 @@ export interface User {
   role: Role;
 }
 
-export interface Customer {
+export interface InventoryItem {
   id: number;
-  name: string;
-  mobile: string;
-  email?: string | null;
-  businessName: string;
-  gstNumber?: string | null;
-  type: string;
-  address: string;
-  status: string;
-  followUpDate?: string | null;
-  notes?: string | null;
+  item: string;
+  category: string;
+  location: string;
+  batch: string;
+  physicalQty: number;
+  reservedQty: number;
+  availableQty: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-export interface Product {
+export interface WorkOrder {
   id: number;
-  name: string;
-  sku: string;
-  category: string;
-  unitPrice: string | number;
-  currentStock: number;
-  minStockQty: number;
-  warehouse: string;
+  location: string;
+  item: string;
+  requiredQty: number;
+  assignedUserId: number;
+  assignedUser?: User;
+  status: "ASSIGNED" | "IN_PROGRESS" | "COMPLETED";
+  shortageQty: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface InternalTransfer {
+  id: number;
+  sourceLocation: string;
+  destinationLocation: string;
+  item: string;
+  batch: string;
+  quantity: number;
+  status: "REQUESTED" | "DISPATCHED" | "RECEIVED";
+  createdById: number;
+  createdBy?: User;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CustomerOrder {
+  id: number;
+  customerName: string;
+  item: string;
+  location: string;
+  batch: string;
+  quantity: number;
+  status: "RESERVED" | "COMPLETED" | "CANCELLED";
+  createdById: number;
+  createdBy?: User;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface StockLog {
+  id: number;
+  item: string;
+  location: string;
+  batch: string;
+  quantity: number;
+  reservedChange: number;
+  type: string;
+  referenceId?: string | null;
+  createdAt: string;
 }
